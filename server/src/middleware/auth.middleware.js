@@ -52,15 +52,7 @@ export const validateRegister = [
 export const validateLogin = [
   body("email").trim().isEmail().normalizeEmail().withMessage("invalid email."),
 
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password must be ar least * charactrs")
-    .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter.")
-    .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number.")
-    .matches(/[^A-Za-z0-9]/)
-    .withMessage("Password must contain at least one special character."),
+  body("password").notEmpty().withMessage("Password is required"),
 ];
 
 export default validateRegister;
