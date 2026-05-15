@@ -78,7 +78,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login Successfully",
       user: { ...user },
-      token: { token },
+      token: token,
     });
   } catch (error) {
     console.error("Login error:", error);
