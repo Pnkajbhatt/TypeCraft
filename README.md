@@ -180,8 +180,8 @@ cd client && npm run dev
 
 ## Roadmap
 
-- [ ] Guest practice with predefined paragraphs
-- [ ] Auth system (Register / Login)
+- [ ✓ ] Guest practice with predefined paragraphs
+- [ ✓ ] Auth system (Register / Login)
 - [ ] Profession selection
 - [ ] AI paragraph generation per profession
 - [ ] Paragraph pool system with background refill
