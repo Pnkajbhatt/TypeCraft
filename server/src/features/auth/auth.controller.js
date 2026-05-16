@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
-  const { name, email, password, profession_id } = req.body;
+  const { name, email, password_hash, profession_id } = req.body;
 
   try {
     const userExists = await db.query("SELECT id FROM users WHERE email = $1", [
@@ -16,10 +16,10 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(
       parseInt(process.env.BCRYPT_SALT_ROUNDS, 10),
     );
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(password_hash, salt);
 
     const result = await db.query(
-      `INSERT INTO users (name, email, password, profession_id)
+      `INSERT INTO users (name, email, password_hash, profession_id)
        VALUES ($1, $2, $3, $4)
        RETURNING id, name, email, profession_id, created_at`,
       [name, email, passwordHash, profession_id],
@@ -45,7 +45,7 @@ const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password_hash } = req.body;
 
   try {
     const userResult = await db.query(
