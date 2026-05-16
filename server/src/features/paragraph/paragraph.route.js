@@ -1,8 +1,8 @@
 import express from "express";
 const router = express.Router();
-import authenticate from "../../middleware/paragraph.middleware.js";
+import authenticate from "../../middleware/auth.middleware.js";
 import getNextParagraph from "./paragraph.controller.js";
 
-router.get("/next", authenticate, getNextParagraph);
+router.get("/new", authenticate, getNextParagraph);
 
 export default router;

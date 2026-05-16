@@ -25,7 +25,7 @@ const getNextparagraph = async (req, res) => {
     );
 
     if (paragraphResult.rows.length === 0) {
-      return res.status(404).json({ error: "user Not found" });
+      return res.status(404).json({ error: "No new paragraphs available." });
     }
 
     const paragraph = paragraphResult.rows[0];
@@ -40,7 +40,7 @@ const getNextparagraph = async (req, res) => {
 
     res.status(200).json({ paragraph });
   } catch (err) {
-    console.error("Error fetching paragraph:", error);
+    console.error("Error fetching paragraph:", err);
     res.status(500).json({ error: "Internal server error." });
   }
 };

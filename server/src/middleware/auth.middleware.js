@@ -23,7 +23,7 @@ export const validateRegister = [
 
   body("email").trim().isEmail().normalizeEmail().withMessage("invalid email."),
 
-  body("password")
+  body("password_hash")
     .isLength({ min: 8 })
     .withMessage("Password must be ar least * charactrs")
     .matches(/[A-Z]/)
@@ -49,10 +49,28 @@ export const validateRegister = [
     }),
 ];
 
+export const autheniticate = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "no token provided" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: "Invalid or expired token.", err });
+    }
+    req.userId = user.userId;
+    next();
+  });
+};
+
 export const validateLogin = [
   body("email").trim().isEmail().normalizeEmail().withMessage("invalid email."),
 
-  body("password").notEmpty().withMessage("Password is required"),
+  body("password_hash").notEmpty().withMessage("Password is required"),
 ];
 
 export default validateRegister;
