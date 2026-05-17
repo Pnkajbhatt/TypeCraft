@@ -17,7 +17,7 @@ app.use("/api/auth", authRouter);
 
 app.use("/api/users", progressRoutes);
 app.use("/api/paragraphs", paragraphRoutes);
-app.use("/api/session", sessionRoutes);
+app.use("/api/sessions", sessionRoutes);
 app.use(errorHandler);
 
 export default app;

@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const generateParagraph = async (professionName) => {
   try {
-    const model = genAI.getGeneratuveModel({ model: "gemini-3.1-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
     const prompt = `
       Generate a **single, short paragraph** (3-5 sentences) for typing practice for a **${professionName}**.
@@ -33,7 +33,7 @@ export const saveParagraph = async (text, profession_id) => {
       `INSERT INTO paragraphs (text, profession_id, is_used)
        VALUES ($1, $2, FALSE)
        RETURNING id, text, profession_id, created_at`,
-      [text, professionId],
+      [text, profession_id],
     );
     return result.rows[0];
   } catch (error) {
