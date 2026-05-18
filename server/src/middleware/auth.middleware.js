@@ -2,6 +2,8 @@ import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
+import jwt from "jsonwebtoken";
+import db from "../config/db.js";
 
 export const securityMiddleware = [
   helmet(),
@@ -48,12 +50,10 @@ export const validateRegister = [
       }
     }),
 ];
-
-export const autheniticate = (req, res, next) => {
+export const authenticate = (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
   const token = authHeader && authHeader.split(" ")[1];
-
   if (!token) {
     return res.status(401).json({ message: "no token provided" });
   }
@@ -62,6 +62,7 @@ export const autheniticate = (req, res, next) => {
     if (err) {
       return res.status(403).json({ error: "Invalid or expired token.", err });
     }
+
     req.userId = user.userId;
     next();
   });
@@ -73,4 +74,4 @@ export const validateLogin = [
   body("password_hash").notEmpty().withMessage("Password is required"),
 ];
 
-export default validateRegister;
+export default authenticate;

@@ -1,9 +1,9 @@
 import express from "express";
 const router = express.Router();
 
-import { autheniticate } from "../../middleware/auth.middleware.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 import { completeSession } from "./session.controller.js";
 
-router.post("/complete", autheniticate, completeSession);
+router.post("/complete", authenticate, completeSession);
 
 export default router;

@@ -3,8 +3,8 @@ const router = express.Router();
 
 import { getProgress } from "./progress.controller.js";
 
-import { autheniticate } from "../../middleware/auth.middleware.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 
-router.get("/progress", autheniticate, getProgress);
+router.get("/progress", authenticate, getProgress);
 
 export default router;
