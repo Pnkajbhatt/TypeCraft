@@ -1,10 +1,10 @@
 import Navbar from "./components/Navbar";
-
+import Hero from "./pages/Hero";
 function App() {
   return (
     <div className="font-mono font-bold ">
       <Navbar />
-      <h1>Homepage</h1>
+      <Hero />
     </div>
   );
 }
