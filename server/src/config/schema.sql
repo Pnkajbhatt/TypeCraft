@@ -26,6 +26,7 @@ CREATE TABLE user_paragraphs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     paragraph_id UUID NOT NULL REFERENCES paragraphs(id),
     user_id UUID NOT NULL REFERENCES users(id),
+    seen_at TIMESTAMP DEFAULT NOW(),
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -36,5 +37,17 @@ CREATE TABLE progress (
     wpm NUMERIC(5,2) NOT NULL,
     accuracy NUMERIC(5,2) NOT NULL,
     mistakes INTEGER NOT NULL,
+    time_taken INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE sessions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id),
+    paragraph_id UUID NOT NULL REFERENCES paragraphs(id),
+    wpm NUMERIC(5,2) NOT NULL,
+    accuracy NUMERIC(5,2) NOT NULL,
+    mistakes INTEGER NOT NULL,
+    time_taken INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );

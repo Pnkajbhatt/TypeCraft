@@ -10,6 +10,7 @@ export const getUserProgress = async (userId) => {
           p.wpm,
           p.accuracy,
           p.mistakes,
+          p.time_taken,
           p.created_at
         FROM progress p
         JOIN paragraphs pr ON p.paragraph_id = pr.id

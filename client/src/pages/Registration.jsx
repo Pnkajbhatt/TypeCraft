@@ -7,7 +7,7 @@ function Register() {
     name: "",
     email: "",
     password_hash: "",
-    profession_name: "normal",
+    profession_name: "Normal",
   });
 
   const [error, setError] = useState({});
@@ -16,11 +16,11 @@ function Register() {
   const navigate = useNavigate();
 
   const professions = [
-    { key: "normal", label: "Normal" },
-    { key: "doctor", label: "Doctor" },
-    { key: "coder", label: "Coder" },
-    { key: "architecture", label: "Architecture" },
-    { key: "lawyer", label: "Lawyer" },
+    { key: "Normal", label: "Normal" },
+    { key: "Doctor", label: "Doctor" },
+    { key: "Coder", label: "Coder" },
+    { key: "Architecture", label: "Architecture" },
+    { key: "Lawyer", label: "Lawyer" },
   ];
 
   const handleChange = (e) => {
@@ -57,14 +57,9 @@ function Register() {
     try {
       const response = await api("post", "/auth/register", formData);
 
-      localStorage.setItem(
-        "token",
-        response.data.user?.token || response.data.token,
-      );
-      localStorage.setItem(
-        "user",
-        JSON.stringify(response.data.user || response.data),
-      );
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      window.dispatchEvent(new Event("auth-changed"));
       navigate("/");
     } catch (err) {
       if (err.response?.data?.error) {

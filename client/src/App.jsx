@@ -3,6 +3,7 @@ import Home from "./pages/Hero";
 import Login from "./pages/Login.jsx";
 import Results from "./pages/Result.jsx";
 import Register from "./pages/Registration.jsx";
+import Profile from "./pages/Profile.jsx";
 import { Route, Routes } from "react-router-dom";
 function App() {
   return (
@@ -15,7 +16,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/results/:sessionId" element={<Results />} />
           {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
         </Routes>
       </main>

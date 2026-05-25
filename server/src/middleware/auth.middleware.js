@@ -7,7 +7,15 @@ import db from "../config/db.js";
 
 export const securityMiddleware = [
   helmet(),
-  cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }),
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000", // React default
+      "http://127.0.0.1:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
+  }),
 ];
 
 export const authLimiter = rateLimit({

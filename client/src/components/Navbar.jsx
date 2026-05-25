@@ -1,11 +1,29 @@
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import SVGlogo from "../assets/logo.png";
 
 function Navbar() {
-  const token = localStorage.getItem("token");
+  const location = useLocation();
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const isProfilePage = location.pathname === "/profile";
+  const actionTo = token ? (isProfilePage ? "/" : "/profile") : "/login";
+  const actionLabel = token ? (isProfilePage ? "Home" : "Profile") : "Sign In";
+
+  useEffect(() => {
+    const syncToken = () => setToken(localStorage.getItem("token"));
+
+    syncToken();
+    window.addEventListener("auth-changed", syncToken);
+    window.addEventListener("storage", syncToken);
+
+    return () => {
+      window.removeEventListener("auth-changed", syncToken);
+      window.removeEventListener("storage", syncToken);
+    };
+  }, [location.pathname]);
 
   return (
-    <nav className="w-full h-16 bg-white border-b-2 border-black flex items-center justify-between px-6 select-none">
+    <nav className="min-w-6xl  m-auto my-2 h-16 bg-white border-b-2 flex items-center justify-between px-6 select-none rounded-[20px] border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:p-6">
       {/* Logo Wrapper */}
       <NavLink
         to="/"
@@ -20,7 +38,7 @@ function Navbar() {
 
       {/* Action / Profile Button */}
       <NavLink
-        to={token ? "/profile" : "/login"}
+        to={actionTo}
         className="
           border 
           border-black 
@@ -34,17 +52,17 @@ function Navbar() {
           bg-white 
           text-black
           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-          hover:translate-x-[1px]
-          hover:translate-y-[1px]
+          hover:translate-x-px
+          hover:translate-y-px
           hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]
-          active:translate-x-[2px]
-          active:translate-y-[2px]
+          active:translate-x-0.5
+          active:translate-y-0.5
           active:shadow-none
           transition-all
           duration-100
         "
       >
-        {token ? "Profile" : "Sign In"}
+        {actionLabel}
       </NavLink>
     </nav>
   );

@@ -4,8 +4,20 @@ import authRouter from "./features/auth/auth.Route.js";
 import paragraphRoutes from "./features/paragraph/paragraph.route.js";
 import sessionRoutes from "./features/session/session.route.js";
 import progressRoutes from "./features/users/progress.rotes.js";
+import cors from "cors";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 

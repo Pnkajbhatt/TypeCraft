@@ -41,11 +41,9 @@ function Login() {
     try {
       const response = await api("post", "/auth/login", formData);
 
-      localStorage.setItem(
-        "token",
-        response.data.user?.token || response.data.token,
-      );
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      window.dispatchEvent(new Event("auth-changed"));
       navigate("/");
     } catch (err) {
       if (err.response?.data?.error) {

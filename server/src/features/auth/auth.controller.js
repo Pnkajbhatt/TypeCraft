@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
-  const { name, email, password_hash, profession_id } = req.body;
+  const { name, email, password, password_hash, profession_name } = req.body;
+  const rawPassword = password || password_hash;
 
   try {
     const userExists = await db.query("SELECT id FROM users WHERE email = $1", [
@@ -12,11 +13,29 @@ const register = async (req, res) => {
     if (userExists.rows.length > 0) {
       return res.status(409).json({ error: "Email already in use." });
     }
+    const professionResult = await db.query(
+      `SELECT id FROM professions WHERE name = $1`,
+      [profession_name],
+    );
+    const profession = professionResult.rows[0];
+    if (!profession || profession.length === 0) {
+      return res.status(400).json({ message: "Profession Doesn't exist" });
+    }
+
+    if (!profession) {
+      return res.status(400).json({ message: "Profession Doesn't exist" });
+    }
+
+    const profession_id = profession.id;
+
+    if (!rawPassword) {
+      return res.status(400).json({ error: "Password is required." });
+    }
 
     const salt = await bcrypt.genSalt(
       parseInt(process.env.BCRYPT_SALT_ROUNDS, 10),
     );
-    const passwordHash = await bcrypt.hash(password_hash, salt);
+    const passwordHash = await bcrypt.hash(rawPassword, salt);
 
     const result = await db.query(
       `INSERT INTO users (name, email, password_hash, profession_id)
@@ -45,7 +64,7 @@ const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password_hash } = req.body;
+  const { email, password } = req.body;
 
   try {
     const userResult = await db.query(

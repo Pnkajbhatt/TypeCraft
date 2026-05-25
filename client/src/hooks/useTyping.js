@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom"; // ADD 1: import karo
+import { useNavigate } from "react-router-dom";
+import api from "../service/api.js";
 
 export const useTypingBox = (initialTime = 60) => {
-  const navigate = useNavigate(); // ADD 2: navigate function le lo
+  const navigate = useNavigate();
 
-  const dummyText =
-    "React is a free and open-source front-end JavaScript library for building user interfaces based on components. Tailwind CSS is a utility-first CSS framework for rapid UI development.";
-
-  const [targetText] = useState(dummyText);
+  const [targetText, setTargetText] = useState("");
+  const [paragraphId, setParagraphId] = useState(null);
+  const [loadingParagraph, setLoadingParagraph] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [mistakes, setMistakes] = useState(0);
@@ -16,12 +17,35 @@ export const useTypingBox = (initialTime = 60) => {
   const [startTime, setStartTime] = useState(null);
 
   const timerRef = useRef(null);
+  const hasSavedRef = useRef(false);
+
+  useEffect(() => {
+    const loadParagraph = async () => {
+      try {
+        setLoadingParagraph(true);
+        setLoadError("");
+
+        const response = localStorage.getItem("token")
+          ? await api("get", "/paragraphs/new")
+          : await api("get", "/paragraphs/guest");
+        setParagraphId(response.paragraph.id);
+        setTargetText(response.paragraph.text);
+      } catch {
+        setLoadError("Failed to load paragraph.");
+      } finally {
+        setLoadingParagraph(false);
+      }
+    };
+
+    loadParagraph();
+  }, []);
 
   const handleInputChange = useCallback(
     (e) => {
       const value = e.target.value;
       if (status === "finished") return;
       if (value.length > targetText.length) return;
+      if (!targetText) return;
 
       if (status === "idle") {
         setStatus("playing");
@@ -85,10 +109,13 @@ export const useTypingBox = (initialTime = 60) => {
 
   // ADD 3: Jab game finish ho to results page pe bhej do
   useEffect(() => {
-    if (status === "finished") {
+    if (status === "finished" && paragraphId && !hasSavedRef.current) {
+      hasSavedRef.current = true;
+
       const timeTaken = startTime
         ? Math.round((Date.now() - startTime) / 1000)
         : initialTime - timeLeft;
+
       const accuracy =
         userInput.length > 0
           ? Math.round(((userInput.length - mistakes) / userInput.length) * 100)
@@ -99,30 +126,72 @@ export const useTypingBox = (initialTime = 60) => {
             userInput.length / 5 / ((Date.now() - startTime) / 1000 / 60),
           )
         : 0;
-      navigate("/results", {
-        state: {
-          wpm,
-          finalWpm,
-          mistakes,
-          accuracy,
-          timeTaken, // seconds me
-          totalChars: targetText.length,
-          typedChars: userInput.length,
-          targetText,
-        },
+
+      api("post", "/sessions/complete", {
+        paragraph_id: paragraphId,
+        wpm: finalWpm,
+        accuracy,
+        mistakes,
+        time_taken: timeTaken,
       });
+      const savedKey = `saved_session_${paragraphId}`;
+      if (sessionStorage.getItem(savedKey)) {
+        // Already saved in this browser session — just navigate.
+        navigate("/results", {
+          state: {
+            finalWpm,
+            mistakes,
+            accuracy,
+            timeTaken,
+            totalChars: targetText.length,
+            typedChars: userInput.length,
+            targetText,
+          },
+        });
+      } else {
+        api("post", "/sessions/complete", {
+          paragraph_id: paragraphId,
+          wpm: finalWpm,
+          accuracy,
+          mistakes,
+          time_taken: timeTaken,
+        })
+          .then(() => {
+            try {
+              sessionStorage.setItem(savedKey, "1");
+            } catch {}
+            navigate("/results", {
+              state: {
+                finalWpm,
+                mistakes,
+                accuracy,
+                timeTaken,
+                totalChars: targetText.length,
+                typedChars: userInput.length,
+                targetText,
+              },
+            });
+          })
+          .catch(() => {
+            try {
+              sessionStorage.setItem(savedKey, "1");
+            } catch {}
+            navigate("/results", {
+              state: {
+                finalWpm,
+                mistakes,
+                accuracy,
+                timeTaken,
+                totalChars: targetText.length,
+                typedChars: userInput.length,
+                targetText,
+              },
+            });
+          });
+      }
     }
-  }, [
-    status,
-    navigate,
-    wpm,
-    mistakes,
-    userInput,
-    targetText,
-    startTime,
-    timeLeft,
-    initialTime,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, paragraphId]);
 
   return {
     targetText,
@@ -131,6 +200,8 @@ export const useTypingBox = (initialTime = 60) => {
     mistakes,
     status,
     wpm,
+    loadingParagraph,
+    loadError,
     handleInputChange,
     restartGame,
   };
