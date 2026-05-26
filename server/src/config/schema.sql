@@ -27,7 +27,8 @@ CREATE TABLE user_paragraphs (
     paragraph_id UUID NOT NULL REFERENCES paragraphs(id),
     user_id UUID NOT NULL REFERENCES users(id),
     seen_at TIMESTAMP DEFAULT NOW(),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (paragraph_id, user_id)
 );
 
 CREATE TABLE progress (

@@ -20,6 +20,16 @@ export const saveProgress = async ({
       [user_id, paragraph_id, wpm, accuracy, mistakes, time_taken ?? 0],
     );
 
+    await client.query(
+      `INSERT INTO user_paragraphs (paragraph_id, user_id)
+       SELECT $1, $2
+       WHERE NOT EXISTS (
+         SELECT 1 FROM user_paragraphs
+         WHERE paragraph_id = $1 AND user_id = $2
+       )`,
+      [paragraph_id, user_id],
+    );
+
     await client.query("COMMIT");
 
     return {
