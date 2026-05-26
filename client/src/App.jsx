@@ -1,6 +1,7 @@
 import Navbar from "./components/Navbar";
 import Home from "./pages/Hero";
 import Login from "./pages/Login.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Results from "./pages/Result.jsx";
 import Register from "./pages/Registration.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -14,7 +15,7 @@ function App() {
           {/* Ye container hai saare Route ka */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/results" element={<Results />} />

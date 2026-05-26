@@ -20,18 +20,10 @@ export const saveProgress = async ({
       [user_id, paragraph_id, wpm, accuracy, mistakes, time_taken ?? 0],
     );
 
-    const progressResult = await client.query(
-      `INSERT INTO progress (user_id, paragraph_id, wpm, accuracy, mistakes, time_taken)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, user_id, paragraph_id, wpm, accuracy, mistakes, time_taken, created_at`,
-      [user_id, paragraph_id, wpm, accuracy, mistakes, time_taken ?? 0],
-    );
-
     await client.query("COMMIT");
 
     return {
       session: sessionResult.rows[0],
-      progress: progressResult.rows[0],
     };
   } catch (error) {
     await client.query("ROLLBACK");

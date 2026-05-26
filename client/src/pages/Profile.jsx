@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../service/api.js";
 
@@ -14,12 +14,31 @@ function Profile() {
   const [sessions, setSessions] = useState([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [sessionError, setSessionError] = useState("");
+  const hasLoadedUserRef = useRef(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      if (!user || hasLoadedUserRef.current) return;
+
+      hasLoadedUserRef.current = true;
+
+      try {
+        const response = await api("get", "/auth/me");
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+      } catch {
+        // Keep the cached user if the server is temporarily unavailable.
+      }
+    };
+
+    loadUser();
+  }, [user]);
 
   useEffect(() => {
     const loadSessions = async () => {
@@ -88,17 +107,26 @@ function Profile() {
             <p className="text-[10px] uppercase tracking-[0.35em] text-neutral-500">
               Email
             </p>
-            <p className="mt-2 text-lg font-bold break-words">
+            <p className="mt-2 text-lg font-bold wrap-break-word">
               {user.email || "-"}
             </p>
           </div>
 
           <div className="border border-black p-4">
             <p className="text-[10px] uppercase tracking-[0.35em] text-neutral-500">
-              Profession
+              Profession ID
             </p>
             <p className="mt-2 text-lg font-bold">
-              {user.profession_name || user.profession_id || "-"}
+              {user.profession_id || "-"}
+            </p>
+          </div>
+
+          <div className="border border-black p-4">
+            <p className="text-[10px] uppercase tracking-[0.35em] text-neutral-500">
+              Profession Name
+            </p>
+            <p className="mt-2 text-lg font-bold">
+              {user.profession_name || "-"}
             </p>
           </div>
         </div>
@@ -135,7 +163,7 @@ function Profile() {
             </p>
           )}
 
-          <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+          <div className="max-h-112 space-y-3 overflow-y-auto pr-1">
             {sessions.map((session) => (
               <button
                 key={session.id}

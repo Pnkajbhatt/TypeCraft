@@ -9,7 +9,7 @@ CREATE TABLE users (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     profession_id UUID NOT NULL REFERENCES professions(id),
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -51,3 +51,11 @@ CREATE TABLE sessions (
     time_taken INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+INSERT INTO professions (name) VALUES
+    ('Normal'),
+    ('Doctor'),
+    ('Coder'),
+    ('Architecture'),
+    ('Lawyer')
+ON CONFLICT (name) DO NOTHING;

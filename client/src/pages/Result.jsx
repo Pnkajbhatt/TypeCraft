@@ -12,6 +12,7 @@ const Results = () => {
 
   const resolvedStats = session || location.state || {};
   const {
+    finalWpm,
     wpm,
     mistakes,
     accuracy,
@@ -23,6 +24,7 @@ const Results = () => {
     targetText,
   } = resolvedStats;
   const displayParagraph = paragraph_text || targetText || "";
+  const displayWpm = finalWpm ?? wpm ?? 0;
   const displayTotalChars =
     totalChars ?? (displayParagraph ? displayParagraph.length : 0);
   const displayTypedChars =
@@ -96,7 +98,7 @@ const Results = () => {
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div className="text-center border border-black p-4">
             <p className="text-sm uppercase tracking-wide mb-1">WPM</p>
-            <p className="text-5xl font-bold">{wpm}</p>
+            <p className="text-5xl font-bold">{displayWpm}</p>
           </div>
 
           <div className="text-center border border-black p-4">

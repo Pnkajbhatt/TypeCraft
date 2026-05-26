@@ -40,6 +40,26 @@ export const useTypingBox = (initialTime = 60) => {
     loadParagraph();
   }, []);
 
+  useEffect(() => {
+    if (status !== "playing") {
+      return undefined;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((currentTimeLeft) => {
+        if (currentTimeLeft <= 1) {
+          clearInterval(timerRef.current);
+          setStatus("finished");
+          return 0;
+        }
+
+        return currentTimeLeft - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [status]);
+
   const handleInputChange = useCallback(
     (e) => {
       const value = e.target.value;
@@ -82,6 +102,7 @@ export const useTypingBox = (initialTime = 60) => {
 
   const restartGame = useCallback(() => {
     clearInterval(timerRef.current);
+    hasSavedRef.current = false;
     setUserInput("");
     setTimeLeft(initialTime);
     setMistakes(0);
@@ -89,25 +110,6 @@ export const useTypingBox = (initialTime = 60) => {
     setWpm(0);
     setStartTime(null);
   }, [initialTime]);
-
-  useEffect(() => {
-    if (status !== "playing") return;
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timerRef.current);
-          setStatus("finished");
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timerRef.current);
-  }, [status]);
-
-  // ADD 3: Jab game finish ho to results page pe bhej do
   useEffect(() => {
     if (status === "finished" && paragraphId && !hasSavedRef.current) {
       hasSavedRef.current = true;
@@ -133,66 +135,47 @@ export const useTypingBox = (initialTime = 60) => {
         accuracy,
         mistakes,
         time_taken: timeTaken,
-      });
-      const savedKey = `saved_session_${paragraphId}`;
-      if (sessionStorage.getItem(savedKey)) {
-        // Already saved in this browser session — just navigate.
-        navigate("/results", {
-          state: {
-            finalWpm,
-            mistakes,
-            accuracy,
-            timeTaken,
-            totalChars: targetText.length,
-            typedChars: userInput.length,
-            targetText,
-          },
-        });
-      } else {
-        api("post", "/sessions/complete", {
-          paragraph_id: paragraphId,
-          wpm: finalWpm,
-          accuracy,
-          mistakes,
-          time_taken: timeTaken,
-        })
-          .then(() => {
-            try {
-              sessionStorage.setItem(savedKey, "1");
-            } catch {}
-            navigate("/results", {
-              state: {
-                finalWpm,
-                mistakes,
-                accuracy,
-                timeTaken,
-                totalChars: targetText.length,
-                typedChars: userInput.length,
-                targetText,
-              },
-            });
-          })
-          .catch(() => {
-            try {
-              sessionStorage.setItem(savedKey, "1");
-            } catch {}
-            navigate("/results", {
-              state: {
-                finalWpm,
-                mistakes,
-                accuracy,
-                timeTaken,
-                totalChars: targetText.length,
-                typedChars: userInput.length,
-                targetText,
-              },
-            });
+      })
+        .then(() => {
+          sessionStorage.setItem(`saved_session_${paragraphId}`, "1");
+          navigate("/results", {
+            state: {
+              finalWpm,
+              mistakes,
+              accuracy,
+              timeTaken,
+              totalChars: targetText.length,
+              typedChars: userInput.length,
+              targetText,
+            },
           });
-      }
+        })
+        .catch(() => {
+          sessionStorage.setItem(`saved_session_${paragraphId}`, "1");
+          navigate("/results", {
+            state: {
+              finalWpm,
+              mistakes,
+              accuracy,
+              timeTaken,
+              totalChars: targetText.length,
+              typedChars: userInput.length,
+              targetText,
+            },
+          });
+        });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, paragraphId]);
-
+  }, [
+    status,
+    paragraphId,
+    startTime,
+    initialTime,
+    timeLeft,
+    userInput,
+    mistakes,
+    targetText,
+    navigate,
+  ]);
   return {
     targetText,
     userInput,
