@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom"; // ADD 1: import karo
+import { useNavigate } from "react-router-dom";
+import api from "../service/api.js";
 
 export const useTypingBox = (initialTime = 60) => {
-  const navigate = useNavigate(); // ADD 2: navigate function le lo
+  const navigate = useNavigate();
 
-  const dummyText =
-    "React is a free and open-source front-end JavaScript library for building user interfaces based on components. Tailwind CSS is a utility-first CSS framework for rapid UI development.";
-
-  const [targetText] = useState(dummyText);
+  const [targetText, setTargetText] = useState("");
+  const [paragraphId, setParagraphId] = useState(null);
+  const [loadingParagraph, setLoadingParagraph] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [mistakes, setMistakes] = useState(0);
@@ -16,12 +17,55 @@ export const useTypingBox = (initialTime = 60) => {
   const [startTime, setStartTime] = useState(null);
 
   const timerRef = useRef(null);
+  const hasSavedRef = useRef(false);
+
+  useEffect(() => {
+    const loadParagraph = async () => {
+      try {
+        setLoadingParagraph(true);
+        setLoadError("");
+
+        const response = localStorage.getItem("token")
+          ? await api("get", "/paragraphs/new")
+          : await api("get", "/paragraphs/guest");
+        setParagraphId(response.paragraph.id);
+        setTargetText(response.paragraph.text);
+      } catch {
+        setLoadError("Failed to load paragraph.");
+      } finally {
+        setLoadingParagraph(false);
+      }
+    };
+
+    loadParagraph();
+  }, []);
+
+  useEffect(() => {
+    if (status !== "playing") {
+      return undefined;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((currentTimeLeft) => {
+        if (currentTimeLeft <= 1) {
+          clearInterval(timerRef.current);
+          setStatus("finished");
+          return 0;
+        }
+
+        return currentTimeLeft - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [status]);
 
   const handleInputChange = useCallback(
     (e) => {
       const value = e.target.value;
       if (status === "finished") return;
       if (value.length > targetText.length) return;
+      if (!targetText) return;
 
       if (status === "idle") {
         setStatus("playing");
@@ -58,6 +102,7 @@ export const useTypingBox = (initialTime = 60) => {
 
   const restartGame = useCallback(() => {
     clearInterval(timerRef.current);
+    hasSavedRef.current = false;
     setUserInput("");
     setTimeLeft(initialTime);
     setMistakes(0);
@@ -65,30 +110,14 @@ export const useTypingBox = (initialTime = 60) => {
     setWpm(0);
     setStartTime(null);
   }, [initialTime]);
-
   useEffect(() => {
-    if (status !== "playing") return;
+    if (status === "finished" && paragraphId && !hasSavedRef.current) {
+      hasSavedRef.current = true;
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timerRef.current);
-          setStatus("finished");
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timerRef.current);
-  }, [status]);
-
-  // ADD 3: Jab game finish ho to results page pe bhej do
-  useEffect(() => {
-    if (status === "finished") {
       const timeTaken = startTime
         ? Math.round((Date.now() - startTime) / 1000)
         : initialTime - timeLeft;
+
       const accuracy =
         userInput.length > 0
           ? Math.round(((userInput.length - mistakes) / userInput.length) * 100)
@@ -99,31 +128,54 @@ export const useTypingBox = (initialTime = 60) => {
             userInput.length / 5 / ((Date.now() - startTime) / 1000 / 60),
           )
         : 0;
-      navigate("/results", {
-        state: {
-          wpm,
-          finalWpm,
-          mistakes,
-          accuracy,
-          timeTaken, // seconds me
-          totalChars: targetText.length,
-          typedChars: userInput.length,
-          targetText,
-        },
-      });
+
+      api("post", "/sessions/complete", {
+        paragraph_id: paragraphId,
+        wpm: finalWpm,
+        accuracy,
+        mistakes,
+        time_taken: timeTaken,
+      })
+        .then(() => {
+          sessionStorage.setItem(`saved_session_${paragraphId}`, "1");
+          navigate("/results", {
+            state: {
+              finalWpm,
+              mistakes,
+              accuracy,
+              timeTaken,
+              totalChars: targetText.length,
+              typedChars: userInput.length,
+              targetText,
+            },
+          });
+        })
+        .catch(() => {
+          sessionStorage.setItem(`saved_session_${paragraphId}`, "1");
+          navigate("/results", {
+            state: {
+              finalWpm,
+              mistakes,
+              accuracy,
+              timeTaken,
+              totalChars: targetText.length,
+              typedChars: userInput.length,
+              targetText,
+            },
+          });
+        });
     }
   }, [
     status,
-    navigate,
-    wpm,
-    mistakes,
-    userInput,
-    targetText,
+    paragraphId,
     startTime,
-    timeLeft,
     initialTime,
+    timeLeft,
+    userInput,
+    mistakes,
+    targetText,
+    navigate,
   ]);
-
   return {
     targetText,
     userInput,
@@ -131,6 +183,8 @@ export const useTypingBox = (initialTime = 60) => {
     mistakes,
     status,
     wpm,
+    loadingParagraph,
+    loadError,
     handleInputChange,
     restartGame,
   };

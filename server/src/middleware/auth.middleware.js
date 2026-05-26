@@ -7,7 +7,15 @@ import db from "../config/db.js";
 
 export const securityMiddleware = [
   helmet(),
-  cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }),
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000", // React default
+      "http://127.0.0.1:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
+  }),
 ];
 
 export const authLimiter = rateLimit({
@@ -35,14 +43,12 @@ export const validateRegister = [
     .matches(/[^A-Za-z0-9]/)
     .withMessage("Password must contain at least one special character."),
 
-  body("profession_id")
+  body("profession_name")
     .notEmpty()
-    .withMessage("Profession ID is required")
-    .isUUID()
-    .withMessage("invalid id")
+    .withMessage("Profession is required")
     .custom(async (value) => {
       const result = await db.query(
-        "SELECT id FROM professions WHERE id = $1",
+        "SELECT id FROM professions WHERE name = $1",
         [value],
       );
       if (result.rows.length === 0) {
@@ -50,6 +56,20 @@ export const validateRegister = [
       }
     }),
 ];
+
+export const validateRequest = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: errors.array()[0].msg,
+      errors: errors.array(),
+    });
+  }
+
+  next();
+};
+
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
@@ -71,7 +91,7 @@ export const authenticate = (req, res, next) => {
 export const validateLogin = [
   body("email").trim().isEmail().normalizeEmail().withMessage("invalid email."),
 
-  body("password_hash").notEmpty().withMessage("Password is required"),
+  body("password").notEmpty().withMessage("Password is required"),
 ];
 
 export default authenticate;

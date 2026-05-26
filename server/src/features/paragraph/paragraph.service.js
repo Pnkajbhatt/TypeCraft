@@ -1,4 +1,4 @@
-import GoogleGenerativeAI from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import db from "../../config/db.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -8,13 +8,27 @@ export const generateParagraph = async (professionName) => {
     const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
     const prompt = `
-      Generate a **single, short paragraph** (3-5 sentences) for typing practice for a **${professionName}**.
-      Use **realistic, profession-specific terminology** and **natural language**.
-      Example for "Software Engineer":
-      "The developer implemented a RESTful API endpoint using Node.js and Express, ensuring proper error handling and input validation. They optimized the database query by adding an index, reducing the response time significantly."
-      Example for "Doctor":
-      "The patient presented with symptoms of tachycardia and hypertension, requiring immediate administration of beta-blockers and lifestyle modifications."
-      Return **only the paragraph text**, no quotes or extra formatting.
+      Generate a **single short paragraph** (3–5 sentences) for typing practice for a **${professionName}**.
+
+Requirements:
+- Use **realistic, profession-specific terminology** and **natural natural language**.
+- Make each output **substantially different** from previous generations.
+- Randomize:
+  - scenario/context (daily tasks, emergencies, meetings, problem-solving, planning, analysis, reports, client interactions, technical issues, etc.)
+  - sentence structure and wording
+  - focus area within the profession
+  - tools, methods, technologies, or concepts used
+- Avoid repeating:
+  - opening phrases
+  - sentence patterns
+  - common templates
+  - identical terminology combinations
+- Create unique situations rather than rewriting the same paragraph with minor word changes.
+- Include occasional realistic numbers, metrics, deadlines, or measurable outcomes where appropriate.
+- Keep the paragraph useful for typing practice with varied word lengths and punctuation.
+- Do not mention that it is generated text.
+
+Return **only the paragraph text**, without quotes, labels, markdown, or extra formatting.
     `;
 
     const result = await model.generateContent(prompt);

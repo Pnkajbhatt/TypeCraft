@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
-  const { name, email, password_hash, profession_id } = req.body;
+  const { name, email, password, password_hash, profession_name } = req.body;
+  const rawPassword = password || password_hash;
 
   try {
     const userExists = await db.query("SELECT id FROM users WHERE email = $1", [
@@ -12,11 +13,29 @@ const register = async (req, res) => {
     if (userExists.rows.length > 0) {
       return res.status(409).json({ error: "Email already in use." });
     }
+    const professionResult = await db.query(
+      `SELECT id FROM professions WHERE name = $1`,
+      [profession_name],
+    );
+    const profession = professionResult.rows[0];
+    if (!profession || profession.length === 0) {
+      return res.status(400).json({ message: "Profession Doesn't exist" });
+    }
+
+    if (!profession) {
+      return res.status(400).json({ message: "Profession Doesn't exist" });
+    }
+
+    const profession_id = profession.id;
+
+    if (!rawPassword) {
+      return res.status(400).json({ error: "Password is required." });
+    }
 
     const salt = await bcrypt.genSalt(
       parseInt(process.env.BCRYPT_SALT_ROUNDS, 10),
     );
-    const passwordHash = await bcrypt.hash(password_hash, salt);
+    const passwordHash = await bcrypt.hash(rawPassword, salt);
 
     const result = await db.query(
       `INSERT INTO users (name, email, password_hash, profession_id)
@@ -26,6 +45,10 @@ const register = async (req, res) => {
     );
 
     const user = result.rows[0];
+    const userWithProfession = {
+      ...user,
+      profession_name: profession.name,
+    };
 
     const token = jwt.sign(
       { userId: user.id, email: user.email },
@@ -35,7 +58,7 @@ const register = async (req, res) => {
 
     res.status(201).json({
       message: "User registered successfully.",
-      user: { ...user },
+      user: userWithProfession,
       token: token,
     });
   } catch (error) {
@@ -45,11 +68,20 @@ const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password_hash } = req.body;
+  const { email, password } = req.body;
 
   try {
     const userResult = await db.query(
-      "SELECT id , name , email , password_hash,profession_id FROM users WHERE email = $1",
+      `SELECT
+         u.id,
+         u.name,
+         u.email,
+         u.password_hash,
+         u.profession_id,
+         p.name AS profession_name
+       FROM users u
+       JOIN professions p ON p.id = u.profession_id
+       WHERE u.email = $1`,
       [email],
     );
     if (userResult.rows.length === 0) {
@@ -82,6 +114,33 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT
+         u.id,
+         u.name,
+         u.email,
+         u.profession_id,
+         p.name AS profession_name,
+         u.created_at
+       FROM users u
+       JOIN professions p ON p.id = u.profession_id
+       WHERE u.id = $1`,
+      [req.userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.status(200).json({ user: result.rows[0] });
+  } catch (error) {
+    console.error("Current user fetch error:", error);
     res.status(500).json({ error: "Internal server error." });
   }
 };

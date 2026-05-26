@@ -1,10 +1,28 @@
 import Navbar from "./components/Navbar";
-import Hero from "./pages/Hero";
+import Home from "./pages/Hero";
+import Login from "./pages/Login.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import Results from "./pages/Result.jsx";
+import Register from "./pages/Registration.jsx";
+import Profile from "./pages/Profile.jsx";
+import { Route, Routes } from "react-router-dom";
 function App() {
   return (
-    <div className="font-mono font-bold ">
+    <div className="font-mono font-bold min-h-screen flex flex-col">
       <Navbar />
-      <Hero />
+      <main className="flex-1">
+        <Routes>
+          {/* Ye container hai saare Route ka */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/results/:sessionId" element={<Results />} />
+          {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+        </Routes>
+      </main>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTypingBox } from "../hooks/useTyping";
 
 const TypingBox = () => {
@@ -8,6 +8,8 @@ const TypingBox = () => {
     timeLeft,
     mistakes,
     status,
+    loadingParagraph,
+    loadError,
     handleInputChange,
     restartGame,
   } = useTypingBox(60);
@@ -28,69 +30,112 @@ const TypingBox = () => {
   };
 
   return (
-    <div
-      onClick={handleContainerClick}
-      className="min-h-96 flex flex-col items-center justify-center bg-white text-black border-2 h-80 rounded-3xl font-mono p-6 cursor-text select-none"
-    >
-      {/* Stats */}
-      <div className="flex items-center gap-10 mb-8 text-lg">
-        <div>
-          Time: <span className="font-bold text-2xl">{timeLeft}s</span>
-        </div>
+    <div className="mx-auto w-4xl max-w-5xl rounded-[20px] border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:p-6">
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-wide">Typing Test</h1>
 
-        <div>
-          Mistakes: <span className="font-bold text-2xl">{mistakes}</span>
-        </div>
+        <div className="flex gap-4">
+          <div className="rounded-2xl bg-white px-6 py-3 border border-neutral-700">
+            <p className="text-xs uppercase text-neutral-900">Time Left</p>
 
-        {status === "finished" && (
+            <p className="text-3xl font-bold">{timeLeft}s</p>
+          </div>
+
+          <div className="rounded-2xl bg-white px-6 py-3 border border-neutral-700">
+            <p className="text-xs uppercase text-neutral-400">Mistakes</p>
+
+            <p className="text-3xl font-bold">{mistakes}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Typing Area */}
+
+      <div
+        onClick={handleContainerClick}
+        className="relative rounded-2xl bg-white px-6 py-3  border-neutral-700 p-8 min-h-[350px] border  cursor-text overflow-hidden"
+      >
+        {loadingParagraph && (
+          <div className="text-center text-neutral-400 animate-pulse">
+            Loading paragraph...
+          </div>
+        )}
+
+        {loadError && (
+          <div className="text-center text-red-500">{loadError}</div>
+        )}
+
+        {!loadingParagraph && !loadError && (
+          <div className="text-2xl leading-[2.5rem] tracking-wide">
+            {targetText.split("").map((char, index) => {
+              let style = "text-neutral-500";
+
+              if (index < userInput.length) {
+                style =
+                  char === userInput[index]
+                    ? "text-green-400"
+                    : "bg-red-500 text-white rounded px-[2px]";
+              }
+
+              const isCursor =
+                index === userInput.length && status !== "finished";
+
+              return (
+                <span
+                  key={index}
+                  className={`${style} ${
+                    isCursor && isFocused
+                      ? "bg-yellow-400 text-black animate-pulse rounded"
+                      : ""
+                  }`}
+                >
+                  {char}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Focus overlay */}
+
+        {!isFocused &&
+          status !== "finished" &&
+          !loadingParagraph &&
+          !loadError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+              <button className="rounded-full bg-white px-6 py-3 font-semibold text-black hover:scale-105 transition">
+                Click to continue typing
+              </button>
+            </div>
+          )}
+      </div>
+
+      {/* Bottom actions */}
+
+      <div className="mt-6 flex justify-between items-center">
+        <p className="text-sm text-neutral-400">
+          {status === "idle"
+            ? "Start typing..."
+            : status === "playing"
+              ? "Typing..."
+              : "Completed"}
+        </p>
+
+        {(status === "playing" || status === "finished") && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               restartGame();
+              inputRef.current?.focus();
             }}
-            className="border border-black px-5 py-2 hover:bg-black hover:text-white transition"
+            className="rounded-xl bg-white px-6 py-3 font-bold text-black transition hover:scale-105"
           >
             Restart
           </button>
         )}
       </div>
 
-      {/* Typing Area */}
-      <div className="relative max-w-4xl text-2xl leading-relaxed border border-black p-8 rounded-lg">
-        {targetText.split("").map((char, index) => {
-          let colorClass = "text-gray-400";
-
-          if (index < userInput.length) {
-            colorClass =
-              char === userInput[index]
-                ? "text-green-500" // correct
-                : "text-red-500"; // wrong
-          }
-
-          const isCursor = index === userInput.length && status !== "finished";
-
-          return (
-            <span
-              key={index}
-              className={`
-                ${colorClass}
-                ${isCursor ? "border-l-2 border-black animate-pulse" : ""}
-              `}
-            >
-              {char}
-            </span>
-          );
-        })}
-
-        {/* Focus overlay */}
-        {status === "playing" && !isFocused && (
-          <div className="absolute inset-0 bg-white flex items-center justify-center border border-black">
-            Click here to continue typing
-          </div>
-        )}
-      </div>
-
-      {/* Hidden Input */}
       <input
         ref={inputRef}
         type="text"
@@ -99,16 +144,8 @@ const TypingBox = () => {
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         disabled={status === "finished"}
-        className="absolute opacity-0 w-0 h-0"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
+        className="absolute opacity-0 pointer-events-none"
       />
-
-      {status === "idle" && (
-        <p className="mt-6 text-sm text-gray-500">Start typing...</p>
-      )}
     </div>
   );
 };
