@@ -30,7 +30,7 @@ const TypingBox = () => {
   };
 
   return (
-    <div className="mx-auto w-4xl max-w-5xl rounded-[20px] border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:p-6">
+    <div className="mx-auto w-7xl max-w-8xl rounded-[20px] border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:p-6">
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-wide">Typing Test</h1>
