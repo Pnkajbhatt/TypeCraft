@@ -1,4 +1,4 @@
-import TypingBox from "../components/TypingBox"; // Fixed casing if your file matches the previous step
+import TypingBox from "../components/Typingbox"; // Fixed casing if your file matches the previous step
 
 function Hero() {
   return (
