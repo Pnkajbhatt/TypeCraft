@@ -25,6 +25,9 @@ app.get("/health", (req, res) => {
   res.send("good");
 });
 
+app.get("/test", (req, res) => {
+  res.json({ message: "Backend is reachable", origin: req.headers.origin });
+});
 app.use("/api/auth", authRouter);
 
 app.use("/api/users", progressRoutes);
