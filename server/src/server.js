@@ -3,7 +3,7 @@ import app from "./app.js";
 import env from "./config/env.js";
 import pool from "./config/db.js";
 
-const PORT = env.PORT || 5000;
+const PORT = env.PORT;
 const server = app.listen(PORT, async () => {
   try {
     await pool.connect();
