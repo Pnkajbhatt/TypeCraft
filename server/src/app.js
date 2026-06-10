@@ -8,7 +8,6 @@ import cors from "cors";
 
 const app = express();
 
-app.options("*", cors());
 app.use(
   cors({
     origin: [
